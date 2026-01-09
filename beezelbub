@@ -1,0 +1,359 @@
+local Players = game:GetService("Players")
+
+local localPlayer = Players.LocalPlayer
+
+-- Load WindUI
+
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+-- Show popup
+
+local Confirmed = false
+
+WindUI:Popup({
+
+Title = "BeezelBub Hub",
+
+Icon = "cuboid",
+
+IconThemed = true,
+
+Content = "Make sure you join our server for more updates",
+
+Buttons = {
+
+{
+
+Title = "Cancel",
+
+Callback = function() end,
+
+Variant = "Secondary"
+
+},
+
+{
+
+Title = "Continue",
+
+Icon = "arrow-right",
+
+Callback = function()
+
+Confirmed = true
+
+end,
+
+Variant = "Primary"
+
+}
+
+}
+
+})
+
+repeat wait() until Confirmed
+
+-- Create Main Window
+
+local Window = WindUI:CreateWindow({
+
+Title = "Adopt Me | BeezelBub Hub",
+
+Icon = "laptop",
+
+Author = "made by Beezelbub",
+
+Folder = "BeezelBubHubAdoptMe",
+
+Size = UDim2.fromOffset(520, 420),
+
+Transparent = false,
+
+Theme = "Dark",
+
+User = {
+
+Enabled = true,
+
+Callback = function() end,
+
+Anonymous = false
+
+},
+
+SideBarWidth = 150,
+
+ScrollBarEnabled = true
+
+})
+
+Window:EditOpenButton({
+
+Title = "Open BeezelBub Hub",
+
+Icon = "rbxassetid://4483345998",
+
+CornerRadius = UDim.new(0, 16),
+
+StrokeThickness = 2,
+
+Color = ColorSequence.new(Color3.fromHex("5787d2"), Color3.fromHex("ffffff")),
+
+OnlyMobile = false,
+
+Enabled = true,
+
+Draggable = true
+
+})
+
+Window:SetToggleKey(Enum.KeyCode.K)
+
+-------------------------------------------------------
+
+-- CREATE TABS
+
+-------------------------------------------------------
+
+local GingerbreadTab = Window:Tab({
+
+Title = "Gingerbread Farm",
+
+Icon = "cookie",
+
+Desc = "Auto farm gingerbread"
+
+})
+
+local PetSpawnerTab = Window:Tab({
+
+Title = "Pet Spawner",
+
+Icon = "heart",
+
+Desc = "Spawn pets"
+
+})
+
+local TeleportsTab = Window:Tab({
+
+Title = "Teleports",
+
+Icon = "map-pin",
+
+Desc = "Teleport to locations"
+
+})
+
+local MinigamesTab = Window:Tab({
+
+Title = "Minigames",
+
+Icon = "gamepad-2",
+
+Desc = "Auto play minigames"
+
+})
+
+local MiscTab = Window:Tab({
+
+Title = "Misc",
+
+Icon = "settings",
+
+Desc = "Miscellaneous features"
+
+})
+
+local HouseClonerTab = Window:Tab({
+
+Title = "House Cloner",
+
+Icon = "skull",
+
+Desc = "Clone and load houses"
+
+})
+
+local DiscordTab = Window:Tab({
+
+Title = "Discord",
+
+Icon = "users",
+
+Desc = "Join our community"
+
+})
+
+-------------------------------------------------------
+
+-- GINGERBREAD FARM SETTINGS
+
+-------------------------------------------------------
+
+local GingerbreadSettings = {
+
+Farming = false,
+
+Delay = 0.5,
+
+StartIndex = 32,
+
+EndIndex = 188,
+
+AntiAFK = true,
+
+Notifications = true,
+
+CurrentIndex = 32,
+
+CollectEnabled = true
+
+}
+
+local GingerbreadStats = {
+
+Collected = 0,
+
+Loops = 0,
+
+StartTime = 0
+
+}
+
+-- Character references
+
+local Character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+localPlayer.CharacterAdded:Connect(function(newChar)
+
+Character = newChar
+
+HumanoidRootPart = newChar:WaitForChild("HumanoidRootPart")
+
+end)
+
+-- Gingerbread Functions
+
+local function getGingerbreadPosition(index)
+
+local interior = workspace:FindFirstChild("Interiors")
+
+if not interior then return nil end
+
+local christmas = interior:FindFirstChild("MainMap!Christmas")
+
+if not christmas then return nil end
+
+local children = christmas:GetChildren()
+
+if index < 1 or index > #children then return nil end
+
+local model = children[index]
+
+if not model then return nil end
+
+local gingerbread = model:FindFirstChild("GingerbreadMan") or 
+
+model:FindFirstChild("Gingerbread") or
+
+model:FindFirstChildWhichIsA("Model")
+
+if gingerbread then
+
+local basePart = gingerbread:FindFirstChildWhichIsA("BasePart")
+
+if basePart then
+
+return basePart.CFrame
+
+elseif gingerbread:IsA("BasePart") then
+
+return gingerbread.CFrame
+
+end
+
+end
+
+local primaryPart = model.PrimaryPart
+
+if primaryPart then
+
+return primaryPart.CFrame
+
+end
+
+return model:GetPivot()
+
+end
+
+local function tryCollect()
+
+if not GingerbreadSettings.CollectEnabled then return false end
+
+local replicatedStorage = game:GetService("ReplicatedStorage")
+
+local remotePaths = {"adoptme_new_net", "adoptme_net", "MainRemote", "IceSkatingNet"}
+
+local eventNames = {
+
+"adoptme_legacy_shared.ContentPacks.Winter2025.Game.IceSkating.IceSkatingNet:16",
+
+"IceSkating:CollectGingerbread",
+
+"CollectGingerbread",
+
+"CollectGingerbreadMan",
+
+"WinterEvent:Collect"
+
+}
+
+for _, path in pairs(remotePaths) do
+
+local remote = replicatedStorage:FindFirstChild(path)
+
+if remote then
+
+for _, eventName in pairs(eventNames) do
+
+local event = remote:FindFirstChild(eventName)
+
+if event then
+
+local success = pcall(function()
+
+event:FireServer()
+
+end)
+
+if success then return true end
+
+end
+
+end
+
+end
+
+end
+
+return false
+
+end
+
+local function startGingerbreadFarming()
+
+GingerbreadStats.StartTime = tick()
+
+while GingerbreadSettings.Farming and HumanoidRootPart do
+
+for i = GingerbreadSettings.StartIndex, GingerbreadSettings.EndIndex do
+
+if not GingerbreadSettings.Farming then break end
+
+if not HumanoidRootPart then break end
+
+GingerbreadSettings.CurrentI
